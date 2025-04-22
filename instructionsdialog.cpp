@@ -6,20 +6,19 @@ InstructionsDialog::InstructionsDialog(QWidget* parent) : QDialog(parent)
     setMinimumSize(400, 300);
     setModal(true);
 
-    // Classic styling
     setStyleSheet(R"(
         QDialog {
-            background-color: #f5f5dc; /* Beige */
+            background-color: #f5f5dc;
         }
         QTextBrowser {
-            background-color: #fff8e7; /* Lighter beige for text area */
+            background-color: #fff8e7;
             border: 1px solid #d3c5b4;
             font-family: "Garamond", serif;
             font-size: 14px;
-            color: #4b3832; /* Darker brown text */
+            color: #4b3832;
         }
         QPushButton {
-            background-color: #deb887; /* BurlyWood */
+            background-color: #deb887;
             color: #4b3832;
             border: 2px solid #8b7e66;
             padding: 8px 15px;
@@ -28,7 +27,7 @@ InstructionsDialog::InstructionsDialog(QWidget* parent) : QDialog(parent)
             font-size: 14px;
             font-weight: bold;
             min-width: 80px;
-            margin-top: 10px; /* Add margin above the button */
+            margin-top: 10px;
         }
         QPushButton:hover { background-color: #cdab77; }
         QPushButton:pressed { background-color: #a08a6c; }
@@ -59,7 +58,7 @@ InstructionsDialog::InstructionsDialog(QWidget* parent) : QDialog(parent)
     btnClose = new QPushButton("Close", this);
 
     mainLayout->addWidget(instructionsText);
-    mainLayout->addWidget(btnClose, 0, Qt::AlignCenter); // Center the close button
+    mainLayout->addWidget(btnClose, 0, Qt::AlignCenter);
 
     setLayout(mainLayout);
 

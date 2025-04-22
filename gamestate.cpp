@@ -22,18 +22,18 @@ bool GameState::saveGame(int board[BOARD_SIZE][BOARD_SIZE], int solution[BOARD_S
     qDebug() << "Saving game...";
     QJsonObject gameState;
 
-    // Save original puzzle state (board)
+	// Save board
     QJsonArray boardArray;
     for (int row = 0; row < BOARD_SIZE; row++) {
         QJsonArray rowArray;
         for (int col = 0; col < BOARD_SIZE; col++) {
-            rowArray.append(board[row][col]); // Save the initial puzzle numbers
+            rowArray.append(board[row][col]);
         }
         boardArray.append(rowArray);
     }
     gameState["board"] = boardArray;
 
-    // Save solution
+	// Save solution
     QJsonArray solutionArray;
     for (int row = 0; row < BOARD_SIZE; row++) {
         QJsonArray rowArray;
@@ -44,21 +44,21 @@ bool GameState::saveGame(int board[BOARD_SIZE][BOARD_SIZE], int solution[BOARD_S
     }
     gameState["solution"] = solutionArray;
 
-    // Save current user inputs (only for non-readonly cells)
+    // Save inputs
     QJsonArray userInputsArray;
     for (int row = 0; row < BOARD_SIZE; row++) {
         QJsonArray rowArray;
         for (int col = 0; col < BOARD_SIZE; col++) {
-            int value = 0; // Default to 0 (empty)
-            if (!cells[row][col]->isReadOnly()) { // Only save input for editable cells
+            int value = 0;
+            if (!cells[row][col]->isReadOnly()) {
                 QString text = cells[row][col]->text();
                 if (!text.isEmpty()) {
                     bool ok;
                     value = text.toInt(&ok);
-                    if (!ok) value = 0; // Save 0 if input is invalid somehow
+                    if (!ok) value = 0;
                 }
             }
-            rowArray.append(value); // Append 0 for readonly cells or empty editable cells
+            rowArray.append(value);
         }
         userInputsArray.append(rowArray);
     }

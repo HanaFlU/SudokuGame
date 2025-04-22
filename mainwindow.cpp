@@ -1,5 +1,5 @@
 ﻿#include "mainwindow.h"
-#include "mainmenu.h" // Include for finding the menu window
+#include "mainmenu.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -13,42 +13,34 @@
 #include <QDebug>
 #include <vector> 
 #include <random> 
-#include <algorithm> // for std::shuffle, std::copy
+#include <algorithm>
 
 // --- Constructor for New Game / Custom ---
-MainWindow::MainWindow(int modeValue, QWidget* parent)
-    : QMainWindow(parent),
-    sudokuLogic(), // Initialize helpers
-    gameState(),
-    uiHelper()
+MainWindow::MainWindow(int modeValue, QWidget* parent) : QMainWindow(parent), sudokuLogic(), gameState(), uiHelper()
 {
     currentMode = (modeValue == 0) ? Mode::Custom : Mode::NewGame;
-    initialDifficulty = (modeValue >= 1 && modeValue <= 3) ? modeValue : 2; // Default to medium if invalid
+    initialDifficulty = (modeValue >= 1 && modeValue <= 3) ? modeValue : 2;
     isCustomMode = (currentMode == Mode::Custom);
 
-    setupUI(); // Setup the UI structure
+    setupUI();
 
     if (currentMode == Mode::NewGame) {
         generateNewGameInternal(initialDifficulty);
     }
-    else { // Custom mode
+    else {
         startCustomGameInternal();
     }
 }
 
 // --- Constructor for Continue Game ---
-MainWindow::MainWindow(Mode mode, QWidget* parent)
-    : QMainWindow(parent),
-    sudokuLogic(), // Initialize helpers
-    gameState(),
-    uiHelper()
+MainWindow::MainWindow(Mode mode, QWidget* parent) : QMainWindow(parent), sudokuLogic(), gameState(), uiHelper()
 {
     Q_ASSERT(mode == Mode::Continue);
     currentMode = Mode::Continue;
     isCustomMode = false;
 
-    setupUI(); // Setup the UI structure
-    continueGameInternal(); // Load the saved game
+    setupUI();
+    continueGameInternal();
 }
 
 // --- Destructor ---
@@ -63,7 +55,6 @@ void MainWindow::setupUI() {
     setCentralWidget(centralWidget);
     centralWidget->setObjectName("centralWidget");
 
-    // Apply base stylesheet (can be moved to UIHelper if desired)
     setStyleSheet(R"(
         QMainWindow { background-color: #f0eadd; }
         QWidget#centralWidget { background-color: #f0eadd; }
@@ -114,12 +105,11 @@ void MainWindow::setupUI() {
                     cells[globalRow][globalCol]->setAlignment(Qt::AlignCenter);
                     cells[globalRow][globalCol]->setMaxLength(1);
                     cells[globalRow][globalCol]->setFixedSize(40, 40);
-                    cells[globalRow][globalCol]->setValidator(new QIntValidator(1, 9, this)); // Validator added here
+                    cells[globalRow][globalCol]->setValidator(new QIntValidator(1, 9, this));
 
-                    // Connect textChanged signal (remains the same)
                     connect(cells[globalRow][globalCol], &QLineEdit::textChanged, this, [this, globalRow, globalCol](const QString&) {
                         handleCellInput(globalRow, globalCol);
-                        });
+                    });
 
                     blockLayout->addWidget(cells[globalRow][globalCol], row, col);
                 }
@@ -134,7 +124,6 @@ void MainWindow::setupUI() {
     QVBoxLayout* controlLayout = new QVBoxLayout;
     controlLayout->setSpacing(10);
 
-    // Use UIHelper to create buttons
     btnValidateCustom = uiHelper.createStyledButton("Validate & Play");
     btnHint = uiHelper.createStyledButton("Hint");
     btnSolve = uiHelper.createStyledButton("Show Solution");
@@ -158,26 +147,21 @@ void MainWindow::setupUI() {
 
     controlFrame->setLayout(controlLayout);
 
-    // Add grid and controls to the main layout
     mainLayout->addWidget(sudokuFrame, 3);
     mainLayout->addWidget(controlFrame, 1);
 
-    // Set initial visibility/enabled state based on mode
     btnValidateCustom->setVisible(isCustomMode);
     btnHint->setEnabled(!isCustomMode);
     btnSolve->setEnabled(!isCustomMode);
     btnSaveGame->setEnabled(!isCustomMode);
 
-    // Connect button signals to slots (remains the same)
+    // Connect button signals to slots
     connect(btnHint, &QPushButton::clicked, this, &MainWindow::giveHint);
     connect(btnReset, &QPushButton::clicked, this, &MainWindow::resetBoard);
     connect(btnSolve, &QPushButton::clicked, this, &MainWindow::showSolution);
     connect(btnValidateCustom, &QPushButton::clicked, this, &MainWindow::validateCustomBoard);
     connect(btnSaveGame, &QPushButton::clicked, this, &MainWindow::saveGame);
     connect(btnBackMenu, &QPushButton::clicked, this, &MainWindow::backToMenu);
-    // The checkSolution slot was previously connected to btnSolve, remove that if btnSolve means "Show Solution" now
-    // If you want a separate "Check" button, create it and connect it to checkSolution
-    // connect(btnSolve, &QPushButton::clicked, this, &MainWindow::checkSolution); // Remove this if btnSolve is for showing solution
 }
 
 // --- Internal Game Initialization ---
@@ -186,10 +170,8 @@ void MainWindow::generateNewGameInternal(int difficulty) {
     isCustomMode = false;
     qDebug() << "Generating new game with difficulty:" << difficulty;
 
-    // Clear internal boards
     for (int i = 0; i < SIZE; ++i) for (int j = 0; j < SIZE; ++j) board[i][j] = solution[i][j] = 0;
 
-    // Use SudokuLogic to generate
     if (!sudokuLogic.generateFullBoard(solution)) {
         QMessageBox::critical(this, "Error", "Failed to generate a full Sudoku board.");
         backToMenu();
@@ -198,13 +180,11 @@ void MainWindow::generateNewGameInternal(int difficulty) {
     qDebug() << "Full solution generated.";
 
     std::copy(&solution[0][0], &solution[0][0] + SIZE * SIZE, &board[0][0]);
-    sudokuLogic.removeNumbers(board, difficulty); // Use SudokuLogic
+    sudokuLogic.removeNumbers(board, difficulty);
     qDebug() << "Numbers removed.";
 
-    // Use UIHelper to update UI
     uiHelper.updateBoardUI(board, cells, gameInProgress);
 
-    // Update controls state
     btnValidateCustom->setVisible(false);
     btnHint->setEnabled(true);
     btnSolve->setEnabled(true);
@@ -225,20 +205,17 @@ void MainWindow::startCustomGameInternal() {
     gameInProgress = false;
     qDebug() << "Starting custom game setup.";
 
-    clearBoardForCustom(); // Clear internal boards
+    clearBoardForCustom();
 
-    // Manually prepare UI for custom input (UIHelper::updateBoardUI sets read-only based on board)
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
             cells[row][col]->setText("");
             cells[row][col]->setReadOnly(false);
-            uiHelper.applyCellStyle(cells[row][col], "default"); // Use helper for style
-            cells[row][col]->setProperty("class", ""); // Clear classes
-            // Validator should already be set in setupUI
+            uiHelper.applyCellStyle(cells[row][col], "default");
+            cells[row][col]->setProperty("class", "");
         }
     }
 
-    // Update controls state
     btnValidateCustom->setVisible(true);
     btnHint->setEnabled(false);
     btnSolve->setEnabled(false);
@@ -252,18 +229,15 @@ void MainWindow::continueGameInternal() {
     gameInProgress = false;
     qDebug() << "Attempting to continue saved game.";
 
-    QJsonObject loadedGameState; // To store the loaded JSON object
-    // Use GameState helper to load data into board and solution arrays
+    QJsonObject loadedGameState;
     if (!gameState.loadGame(board, solution, loadedGameState)) {
         QMessageBox::warning(this, "Load Error", "Could not load the saved game. Starting a new Medium game.");
-        generateNewGameInternal(2); // Fallback
+        generateNewGameInternal(2);
         return;
     }
 
-    // Use UIHelper to update the basic board UI (sets read-only cells)
     uiHelper.updateBoardUI(board, cells, gameInProgress);
 
-    // Load user inputs from the JsonObject into the UI
     if (loadedGameState.contains("userInputs") && loadedGameState["userInputs"].isArray()) {
         QJsonArray userInputsArray = loadedGameState["userInputs"].toArray();
         for (int row = 0; row < SIZE; row++) {
@@ -272,13 +246,11 @@ void MainWindow::continueGameInternal() {
                 for (int col = 0; col < SIZE; col++) {
                     if (col < rowArray.size()) {
                         int value = rowArray[col].toInt();
-                        // If the cell is editable (board[row][col] == 0) and has a saved value
                         if (board[row][col] == 0 && value != 0) {
                             cells[row][col]->setText(QString::number(value));
-                            // handleCellInput will be triggered to style/validate
                         }
                         else if (board[row][col] == 0 && value == 0) {
-                            cells[row][col]->setText(""); // Ensure empty if saved as 0
+                            cells[row][col]->setText("");
                         }
                     }
                 }
@@ -286,7 +258,6 @@ void MainWindow::continueGameInternal() {
         }
     }
 
-    // Update controls state
     btnValidateCustom->setVisible(false);
     btnHint->setEnabled(true);
     btnSolve->setEnabled(true);
@@ -303,7 +274,6 @@ void MainWindow::giveHint() {
     std::vector<std::pair<int, int>> emptyEditableCells;
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
-            // Find cells that are editable (part of the puzzle, not givens) and currently empty
             if (board[row][col] == 0 && cells[row][col]->text().isEmpty()) {
                 emptyEditableCells.emplace_back(row, col);
             }
@@ -316,10 +286,10 @@ void MainWindow::giveHint() {
         std::shuffle(emptyEditableCells.begin(), emptyEditableCells.end(), g);
 
         auto [row, col] = emptyEditableCells.front();
-        cells[row][col]->setText(QString::number(solution[row][col])); // Set text
-        // handleCellInput will style it correctly
+        cells[row][col]->setText(QString::number(solution[row][col]));
+
         statusLabel->setText(QString("Hint: Cell (%1, %2) is %3").arg(row + 1).arg(col + 1).arg(solution[row][col]));
-        gameInProgress = true; // Hint counts as progress
+        gameInProgress = true;
     }
     else {
         bool full = true;
@@ -337,19 +307,15 @@ void MainWindow::giveHint() {
 void MainWindow::showSolution() {
     if (isCustomMode) return;
 
-    // Ensure solution is valid (it should be after generation/load)
-    // Maybe add a check here if needed, but rely on generation/load being correct.
 
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
-            // Only update cells that were originally empty
             if (board[row][col] == 0) {
                 cells[row][col]->setText(QString::number(solution[row][col]));
-                uiHelper.applyCellStyle(cells[row][col], "solution"); // Apply solution style
+                uiHelper.applyCellStyle(cells[row][col], "solution");
                 cells[row][col]->setReadOnly(true);
             }
             else {
-                // Ensure original numbers have the readonly style
                 uiHelper.applyCellStyle(cells[row][col], "readonly");
             }
         }
@@ -359,14 +325,13 @@ void MainWindow::showSolution() {
     gameInProgress = false;
     btnHint->setEnabled(false);
     btnSaveGame->setEnabled(false);
-    btnReset->setEnabled(false); // Or maybe allow reset to start state? User decision.
-    btnSolve->setEnabled(false); // Already solved
+    btnReset->setEnabled(false); 
+    btnSolve->setEnabled(false);
 }
 
 void MainWindow::resetBoard() {
     qDebug() << "Resetting board. Custom mode:" << isCustomMode;
     if (isCustomMode) {
-        // Clear all cells for custom input setup
         for (int row = 0; row < SIZE; row++) {
             for (int col = 0; col < SIZE; col++) {
                 cells[row][col]->setText("");
@@ -377,22 +342,21 @@ void MainWindow::resetBoard() {
         statusLabel->setText("Custom board input cleared.");
     }
     else {
-        // Reset only user-editable cells to empty
         for (int row = 0; row < SIZE; row++) {
             for (int col = 0; col < SIZE; col++) {
-                if (board[row][col] == 0) { // If it was originally empty
+                if (board[row][col] == 0) {
                     cells[row][col]->setText("");
                     uiHelper.applyCellStyle(cells[row][col], "default");
                     cells[row][col]->setProperty("class", "");
                 }
-                else { // If it was a given number, ensure readonly style
+                else {
                     uiHelper.applyCellStyle(cells[row][col], "readonly");
                 }
             }
         }
         statusLabel->setText("Board reset to initial state.");
         gameInProgress = false;
-        // Re-enable buttons that might have been disabled by solving/winning
+
         btnHint->setEnabled(true);
         btnSolve->setEnabled(true);
         btnSaveGame->setEnabled(true);
@@ -405,7 +369,6 @@ void MainWindow::validateCustomBoard() {
     int customBoard[SIZE][SIZE] = { 0 };
     bool hasInput = false;
 
-    // 1. Read UI into customBoard (same as before)
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
             QString text = cells[row][col]->text();
@@ -428,14 +391,12 @@ void MainWindow::validateCustomBoard() {
         return;
     }
 
-    // 2. Check initial conflicts (same as before)
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
             int num = customBoard[row][col];
             if (num != 0) {
                 int originalValue = customBoard[row][col];
                 customBoard[row][col] = 0;
-                // Use SudokuLogic's isValid for consistency
                 bool placementValid = sudokuLogic.isValid(customBoard, row, col, originalValue);
                 customBoard[row][col] = originalValue;
                 if (!placementValid) {
@@ -447,23 +408,19 @@ void MainWindow::validateCustomBoard() {
     }
     qDebug() << "Initial board conflicts check passed.";
 
-    // 3. Use SudokuLogic to check for unique solution and get the solution
-    // Pass 'solution' array to be filled by hasUniqueSolution
     if (!sudokuLogic.hasUniqueSolution(customBoard, solution)) {
         QMessageBox::warning(this, "Invalid Board", "Puzzle must have exactly one unique solution.");
-        // Clear the potentially partially filled solution array if no unique solution found
         for (int i = 0; i < SIZE; ++i) for (int j = 0; j < SIZE; ++j) solution[i][j] = 0;
         qDebug() << "Unique solution check failed.";
         return;
     }
     qDebug() << "Unique solution check passed.";
 
-    // 4. Validation passed: Update internal board, UI, and state
     std::copy(&customBoard[0][0], &customBoard[0][0] + SIZE * SIZE, &board[0][0]);
-    uiHelper.updateBoardUI(board, cells, gameInProgress); // Update UI to reflect the new board
+    uiHelper.updateBoardUI(board, cells, gameInProgress);
 
     isCustomMode = false;
-    gameInProgress = false; // Start of the playable game
+    gameInProgress = false;
     btnValidateCustom->setVisible(false);
     btnHint->setEnabled(true);
     btnSolve->setEnabled(true);
@@ -480,10 +437,9 @@ void MainWindow::saveGame() {
         return;
     }
 
-    // Use GameState helper to save
     if (gameState.saveGame(board, solution, cells)) {
         statusLabel->setText("Game saved successfully!");
-        gameInProgress = false; // Mark as saved
+        gameInProgress = false;
     }
     else {
         QMessageBox::warning(this, "Save Error", "Could not save the game state.");
@@ -492,31 +448,27 @@ void MainWindow::saveGame() {
 
 void MainWindow::backToMenu() {
     qDebug() << "Back to menu clicked. gameInProgress:" << gameInProgress;
-    bool proceedToClose = true; // Assume we can close unless cancelled
+    bool proceedToClose = true;
 
-    if (gameInProgress && !isCustomMode) { // Ask to save if progress exists
+    if (gameInProgress && !isCustomMode) {
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(this, "Return to Menu", "Do you want to save your progress?",
             QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
         if (reply == QMessageBox::Save) {
-            saveGame(); // Use the saveGame slot
-            // Proceed to close
+            saveGame();
         }
         else if (reply == QMessageBox::Cancel) {
-            proceedToClose = false; // Don't close or emit signal
+            proceedToClose = false;
         }
-        // If Discard, proceedToClose remains true
     }
 
     if (proceedToClose) {
-        // Don't emit gameClosed() here. Let closeEvent handle it when accepted.
-        // Just initiate the close process. closeEvent will run.
+        this->setProperty("closeFromBackButton", true);
+        emit gameClosed();
         this->close();
     }
 }
-
-
 
 void MainWindow::checkSolution() {
     if (isCustomMode) {
@@ -525,18 +477,16 @@ void MainWindow::checkSolution() {
     }
     if (!isBoardCompleteAndCorrect()) {
         statusLabel->setText("The board is not complete or contains errors. Keep trying!");
-        // Optionally add highlighting of errors here
     }
     else {
         QMessageBox::information(this, "Congratulations!", "You solved the puzzle correctly!");
-        gameInProgress = false; // Game finished
+        gameInProgress = false;
         btnHint->setEnabled(false);
         btnSaveGame->setEnabled(false);
-        btnSolve->setEnabled(false); // Already solved
+        btnSolve->setEnabled(false);
         statusLabel->setText("Puzzle Solved!");
     }
 }
-
 
 // --- Cell Input Handling ---
 
@@ -547,11 +497,11 @@ void MainWindow::handleCellInput(int row, int col) {
 
     gameInProgress = true;
     QString text = cells[row][col]->text();
-    cells[row][col]->setProperty("class", ""); // Clear property first
-    uiHelper.applyCellStyle(cells[row][col], "default"); // Reset to default style
+    cells[row][col]->setProperty("class", "");
+    uiHelper.applyCellStyle(cells[row][col], "default");
 
     if (text.isEmpty()) {
-        return; // Cleared, style is reset
+        return;
     }
 
     bool ok;
@@ -563,7 +513,6 @@ void MainWindow::handleCellInput(int row, int col) {
         return;
     }
 
-    // Check for conflicts with other visible numbers
     bool conflict = false;
     // Check row
     for (int c = 0; c < SIZE; ++c) if (c != col && cells[row][c]->text() == text) conflict = true;
@@ -582,18 +531,16 @@ void MainWindow::handleCellInput(int row, int col) {
         }
     }
 
-    // Apply style based on conflict or correctness (if not in custom setup)
     if (conflict) {
         uiHelper.applyCellStyle(cells[row][col], "incorrect");
         statusLabel->setText("Number conflicts with another cell.");
     }
-    else if (!isCustomMode && solution[row][col] != 0) { // Check against solution only in play mode
+    else if (!isCustomMode && solution[row][col] != 0) {
         if (userInput == solution[row][col]) {
             uiHelper.applyCellStyle(cells[row][col], "correct");
             statusLabel->setText("Correct!");
-            // Check for win condition immediately after placing a correct number
             if (isBoardCompleteAndCorrect()) {
-                checkSolution(); // Trigger the win message and state update
+                checkSolution();
             }
         }
         else {
@@ -605,14 +552,13 @@ void MainWindow::handleCellInput(int row, int col) {
         statusLabel->setText("Enter puzzle numbers or Validate.");
     }
     else {
-        statusLabel->setText("Number placed (no conflicts)."); // No conflict, but not checking solution yet
+        statusLabel->setText("Number placed (no conflicts).");
     }
 }
 
 // --- Helper Methods ---
 
 void MainWindow::clearBoardForCustom() {
-    // Simple array clearing, no UI interaction needed here
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
             board[row][col] = 0;
@@ -624,7 +570,6 @@ void MainWindow::clearBoardForCustom() {
 bool MainWindow::isBoardCompleteAndCorrect() {
     if (isCustomMode) return false;
 
-    // Gather current text from UI cells
     QVector<QVector<QString>> cellTexts(SIZE, QVector<QString>(SIZE));
     for (int r = 0; r < SIZE; ++r) {
         for (int c = 0; c < SIZE; ++c) {
@@ -632,24 +577,26 @@ bool MainWindow::isBoardCompleteAndCorrect() {
         }
     }
 
-    // Use SudokuLogic helper to check
     return sudokuLogic.isBoardCompleteAndCorrect(board, solution, cellTexts);
 }
-
 
 // --- Window Event Handling ---
 
 void MainWindow::closeEvent(QCloseEvent* event) {
     qDebug() << "Close event triggered. gameInProgress:" << gameInProgress;
-    bool needsPrompt = gameInProgress && !isCustomMode;
-    bool accepted = true; // Assume accepted unless prompt says otherwise or already handled
+
+    bool fromBackButton = this->property("closeFromBackButton").toBool();
+
+    bool needsPrompt = gameInProgress && !isCustomMode && !fromBackButton;
+    bool accepted = true;
+
     if (needsPrompt) {
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(this, "Exit Game", "Do you want to save your progress before exiting?",
             QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
         if (reply == QMessageBox::Save) {
-            saveGame(); // Attempt to save
+            saveGame();
             event->accept();
         }
         else if (reply == QMessageBox::Discard) {
@@ -657,18 +604,17 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         }
         else { // Cancel
             event->ignore();
-            accepted = false; // Mark as not accepted
+            accepted = false;
         }
     }
     else {
-        event->accept(); // No changes or in custom mode, just accept
-    }
-    if (accepted && event->isAccepted()) {
-        qDebug() << "Close event accepted, emitting gameClosed()";
-        emit gameClosed(); // Emit the signal AFTER acceptance
-    }
-    else {
-        qDebug() << "Close event ignored or cancelled.";
+        event->accept();
     }
 
+    if (accepted && event->isAccepted() && !fromBackButton) {
+        qDebug() << "Close event accepted, emitting gameClosed()";
+        emit gameClosed();
+    }
+
+    this->setProperty("closeFromBackButton", false);
 }

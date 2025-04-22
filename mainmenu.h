@@ -1,10 +1,16 @@
 #ifndef MAINMENU_H
 #define MAINMENU_H
 
+#include <QApplication>
 #include <QWidget>
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QFile>
+#include <QStandardPaths>
+#include <QDir>
+#include <QFontDatabase>
+#include <QDebug>
 
 class MainWindow;
 class DifficultyDialog;

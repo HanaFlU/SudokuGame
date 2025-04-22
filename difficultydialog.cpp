@@ -4,24 +4,23 @@
 DifficultyDialog::DifficultyDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("Select Difficulty");
-    setModal(true); // Block interaction with the main menu
+    setModal(true);
 
-    // Classic styling
     setStyleSheet(R"(
         QDialog {
-            background-color: #f5f5dc; /* Beige */
+            background-color: #f5f5dc; 
         }
         QLabel {
             font-family: "Garamond", serif;
             font-size: 18px;
             font-weight: bold;
-            color: #5a4d41; /* Dark brown */
+            color: #5a4d41;
             margin-bottom: 15px;
         }
         QRadioButton {
             font-family: "Garamond", serif;
             font-size: 14px;
-            color: #4b3832; /* Darker brown text */
+            color: #4b3832;
             margin-bottom: 5px;
         }
         QRadioButton::indicator {
@@ -29,7 +28,7 @@ DifficultyDialog::DifficultyDialog(QWidget* parent) : QDialog(parent)
             height: 15px;
         }
         QPushButton {
-            background-color: #deb887; /* BurlyWood */
+            background-color: #deb887;
             color: #4b3832;
             border: 2px solid #8b7e66;
             padding: 8px 15px;
@@ -53,10 +52,10 @@ DifficultyDialog::DifficultyDialog(QWidget* parent) : QDialog(parent)
     rbHard = new QRadioButton("Hard", this);
     rbCustom = new QRadioButton("Custom Board", this);
 
-    rbMedium->setChecked(true); // Default selection
+    rbMedium->setChecked(true); // Default
 
     buttonGroup = new QButtonGroup(this);
-    buttonGroup->addButton(rbEasy, 1); // Assign IDs: 1=Easy, 2=Medium, 3=Hard, 0=Custom
+    buttonGroup->addButton(rbEasy, 1); //1=Easy, 2=Medium, 3=Hard, 0=Custom
     buttonGroup->addButton(rbMedium, 2);
     buttonGroup->addButton(rbHard, 3);
     buttonGroup->addButton(rbCustom, 0);
@@ -75,7 +74,7 @@ DifficultyDialog::DifficultyDialog(QWidget* parent) : QDialog(parent)
     mainLayout->addWidget(rbMedium);
     mainLayout->addWidget(rbHard);
     mainLayout->addWidget(rbCustom);
-    mainLayout->addSpacing(20); // Add some space before buttons
+    mainLayout->addSpacing(20);
     mainLayout->addLayout(buttonLayout);
 
     setLayout(mainLayout);

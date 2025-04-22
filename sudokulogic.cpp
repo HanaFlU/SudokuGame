@@ -23,7 +23,7 @@ bool SudokuLogic::isValid(int board[SIZE][SIZE], int row, int col, int num) {
 }
 
 bool SudokuLogic::generateFullBoard(int board[SIZE][SIZE], int row, int col) {
-    if (row == SIZE) return true; // Base case: reached end of board
+    if (row == SIZE) return true; // end of board
 
     int nextRow = row, nextCol = col + 1;
     if (nextCol == SIZE) {
@@ -31,7 +31,6 @@ bool SudokuLogic::generateFullBoard(int board[SIZE][SIZE], int row, int col) {
         nextCol = 0;
     }
 
-    // Skip already filled cells (shouldn't happen if called on empty board)
     if (board[row][col] != 0) return generateFullBoard(board, nextRow, nextCol);
 
     std::vector<int> numbers = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -45,14 +44,13 @@ bool SudokuLogic::generateFullBoard(int board[SIZE][SIZE], int row, int col) {
             if (generateFullBoard(board, nextRow, nextCol)) {
                 return true;
             }
-            board[row][col] = 0; // Backtrack if recursion failed
+            board[row][col] = 0; // Backtrack
         }
     }
     return false;
 }
 
 bool SudokuLogic::solveSudoku(int currentBoard[SIZE][SIZE], int row, int col, int& solutionCount) {
-    // Find the next empty cell
     while (row < SIZE && currentBoard[row][col] != 0) {
         col++;
         if (col == SIZE) {
@@ -61,18 +59,16 @@ bool SudokuLogic::solveSudoku(int currentBoard[SIZE][SIZE], int row, int col, in
         }
     }
 
-    // Base case: If no empty cell is found, a solution is reached
+    // no empty cell, a solution is reached
     if (row == SIZE) {
         solutionCount++;
         return solutionCount <= 1;
     }
 
-    // Try filling the current empty cell with numbers 1-9
     for (int num = 1; num <= SIZE; num++) {
-        // Create a temporary board copy to check validity
         int tempBoardCheck[SIZE][SIZE];
         std::copy(&currentBoard[0][0], &currentBoard[0][0] + SIZE * SIZE, &tempBoardCheck[0][0]);
-        tempBoardCheck[row][col] = num; // Temporarily place the number
+        tempBoardCheck[row][col] = num;
 
         bool placement_valid = true;
         // Check row
@@ -91,15 +87,14 @@ bool SudokuLogic::solveSudoku(int currentBoard[SIZE][SIZE], int row, int col, in
         }
 
         if (placement_valid) {
-            currentBoard[row][col] = num; // Place the number
+            currentBoard[row][col] = num;
 
-            // Recursively call solveSudoku for the next cell
             if (!solveSudoku(currentBoard, row, col, solutionCount)) {
-                // If the recursive call returned false (more than 1 solution found), stop
-                currentBoard[row][col] = 0; // Backtrack before returning false
+                // false (> 1 solution), stop
+                currentBoard[row][col] = 0; // Backtrack
                 return false;
             }
-            // If solutionCount is already > 1, we can stop early
+            // stop early
             if (solutionCount > 1) {
                 currentBoard[row][col] = 0; // Backtrack
                 return false;
@@ -107,28 +102,25 @@ bool SudokuLogic::solveSudoku(int currentBoard[SIZE][SIZE], int row, int col, in
         }
     }
 
-    // If no number from 1-9 works for the current cell, backtrack
-    currentBoard[row][col] = 0;
-    // Return true if we are still potentially on the path to the first solution or exactly one found
-    // Return false if we have already found more than one solution
+    currentBoard[row][col] = 0; // backtrack
+    
     return solutionCount <= 1;
 }
 
 void SudokuLogic::removeNumbers(int currentBoard[SIZE][SIZE], int difficulty) {
     int cellsToRemove;
     switch (difficulty) {
-    case 1: cellsToRemove = 35; break; // Easy ~35-40
-    case 2: cellsToRemove = 45; break; // Medium ~45-50
-    case 3: cellsToRemove = 55; break; // Hard ~55+
+    case 1: cellsToRemove = 35; break; // Easy
+    case 2: cellsToRemove = 45; break; // Medium
+    case 3: cellsToRemove = 55; break; // Hard
     default: cellsToRemove = 45; break;
     }
 
     std::random_device rd;
     std::mt19937 g(rd());
     int removedCount = 0;
-    int attempts = 0; // Prevent infinite loop if uniqueness is hard to maintain
+    int attempts = 0;
 
-    // Create a list of all cell coordinates
     std::vector<std::pair<int, int>> cellsList;
     for (int r = 0; r < SIZE; ++r) {
         for (int c = 0; c < SIZE; ++c) {
@@ -139,14 +131,14 @@ void SudokuLogic::removeNumbers(int currentBoard[SIZE][SIZE], int difficulty) {
 
     for (const auto& cell : cellsList) {
         if (removedCount >= cellsToRemove) break;
-        if (attempts > SIZE * SIZE * 2) break; // Safety break
+        if (attempts > SIZE * SIZE * 2) break;
 
         int row = cell.first;
         int col = cell.second;
 
         if (currentBoard[row][col] != 0) {
             int tempVal = currentBoard[row][col];
-            currentBoard[row][col] = 0; // Try removing
+            currentBoard[row][col] = 0; 
             attempts++;
 
             // Check uniqueness
@@ -156,27 +148,27 @@ void SudokuLogic::removeNumbers(int currentBoard[SIZE][SIZE], int difficulty) {
             solveSudoku(tempBoard, 0, 0, solutionCount);
 
             if (solutionCount != 1) {
-                currentBoard[row][col] = tempVal; // Put it back if not unique
+                currentBoard[row][col] = tempVal;
             }
             else {
-                removedCount++; // Successfully removed
+                removedCount++;
             }
         }
     }
     qDebug() << "Removed" << removedCount << "cells for difficulty" << difficulty;
 }
 
-void SudokuLogic::printBoard(int pBoard[SIZE][SIZE]) {
-    qDebug() << "Current Board State:";
-    for (int i = 0; i < SIZE; i++) {
-        QString rowStr = "";
-        for (int j = 0; j < SIZE; j++) {
-            rowStr += QString::number(pBoard[i][j]) + " ";
-        }
-        qDebug() << rowStr;
-    }
-    qDebug() << "======================";
-}
+//void SudokuLogic::printBoard(int pBoard[SIZE][SIZE]) {
+//    qDebug() << "Current Board State:";
+//    for (int i = 0; i < SIZE; i++) {
+//        QString rowStr = "";
+//        for (int j = 0; j < SIZE; j++) {
+//            rowStr += QString::number(pBoard[i][j]) + " ";
+//        }
+//        qDebug() << rowStr;
+//    }
+//    qDebug() << "======================";
+//}
 
 bool SudokuLogic::hasUniqueSolution(int board[SIZE][SIZE], int solution[SIZE][SIZE]) {
     int tempBoard[SIZE][SIZE];
@@ -185,7 +177,6 @@ bool SudokuLogic::hasUniqueSolution(int board[SIZE][SIZE], int solution[SIZE][SI
     int solutionCount = 0;
     solveSudoku(tempBoard, 0, 0, solutionCount);
 
-    // Copy the first solution found to the solution array
     if (solutionCount == 1) {
         std::copy(&tempBoard[0][0], &tempBoard[0][0] + SIZE * SIZE, &solution[0][0]);
     }
@@ -194,20 +185,19 @@ bool SudokuLogic::hasUniqueSolution(int board[SIZE][SIZE], int solution[SIZE][SI
     return solutionCount == 1;
 }
 
-bool SudokuLogic::isBoardCompleteAndCorrect(int board[SIZE][SIZE], int solution[SIZE][SIZE],
-    const QVector<QVector<QString>>& cellTexts) {
+bool SudokuLogic::isBoardCompleteAndCorrect(int board[SIZE][SIZE], int solution[SIZE][SIZE], const QVector<QVector<QString>>& cellTexts) {
     for (int row = 0; row < SIZE; ++row) {
         for (int col = 0; col < SIZE; ++col) {
             QString text = cellTexts[row][col];
             if (text.isEmpty()) {
-                return false; // Not full
+                return false;
             }
             bool ok;
             int val = text.toInt(&ok);
             if (!ok || val != solution[row][col]) {
-                return false; // Incorrect number or invalid text
+                return false;
             }
         }
     }
-    return true; // Board is full and correct
+    return true;
 }

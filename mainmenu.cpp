@@ -1,13 +1,7 @@
 #include "mainmenu.h"
-#include "mainwindow.h" // Include the actual game window header
+#include "mainwindow.h"
 #include "difficultydialog.h"
 #include "instructionsdialog.h"
-#include <QApplication>
-#include <QFile>
-#include <QStandardPaths>
-#include <QDir>
-#include <QFontDatabase>
-#include <QDebug> // For debugging
 
 MainMenu::MainMenu(QWidget* parent) : QWidget(parent)
 {
@@ -70,10 +64,10 @@ void MainMenu::setupUI() {
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(15);
-    mainLayout->setAlignment(Qt::AlignCenter); // Center everything vertically
+    mainLayout->setAlignment(Qt::AlignCenter);
 
     titleLabel = new QLabel("Sudoku", this);
-    titleLabel->setObjectName("titleLabel"); // For specific styling
+	titleLabel->setObjectName("titleLabel"); // Set object name for styling
     titleLabel->setAlignment(Qt::AlignCenter);
 
     btnNewGame = new QPushButton("New Game", this);
@@ -85,7 +79,7 @@ void MainMenu::setupUI() {
     mainLayout->addWidget(btnNewGame);
     mainLayout->addWidget(btnContinueGame);
     mainLayout->addWidget(btnInstructions);
-    mainLayout->addStretch(1); // Add stretch before the exit button
+    mainLayout->addStretch(1);
     mainLayout->addWidget(btnExit);
     mainLayout->addStretch(1);
 
@@ -107,16 +101,16 @@ void MainMenu::startNewGame() {
         int mode = difficultyDialog->getSelectedMode(); // 0: Custom, 1: Easy, 2: Medium, 3: Hard
 
         if (gameWindow) {
-            gameWindow->close(); // Close existing game window if any
-            delete gameWindow;   // Delete it properly
+            gameWindow->close();
+            delete gameWindow;   // Delete properly
         }
-        gameWindow = new MainWindow(mode); // Pass mode to MainWindow constructor
-        // Connect a signal from gameWindow closing back to the menu if needed
-        // connect(gameWindow, &MainWindow::gameClosed, this, &MainMenu::handleGameFinished);
+        gameWindow = new MainWindow(mode);
+
+        connect(gameWindow, &MainWindow::gameClosed, this, &MainMenu::handleGameFinished);
+
         gameWindow->show();
-        this->hide(); // Hide the main menu
+        this->hide();
     }
-    // If dialog is rejected, do nothing (stay on menu)
 }
 
 void MainMenu::continueGame() {
@@ -124,8 +118,10 @@ void MainMenu::continueGame() {
         gameWindow->close();
         delete gameWindow;
     }
-    gameWindow = new MainWindow(MainWindow::Mode::Continue); // Use a special mode/flag
-    // connect(gameWindow, &MainWindow::gameClosed, this, &MainMenu::handleGameFinished);
+    gameWindow = new MainWindow(MainWindow::Mode::Continue);
+
+    connect(gameWindow, &MainWindow::gameClosed, this, &MainMenu::handleGameFinished);
+    
     gameWindow->show();
     this->hide();
 }
@@ -134,7 +130,7 @@ void MainMenu::showInstructions() {
     if (!instructionsDialog) {
         instructionsDialog = new InstructionsDialog(this);
     }
-    instructionsDialog->exec(); // Show as a modal dialog
+    instructionsDialog->exec();
 }
 
 void MainMenu::exitApplication() {
@@ -142,19 +138,14 @@ void MainMenu::exitApplication() {
 }
 
 void MainMenu::handleGameFinished() {
-    // This function is called when the game window is closed
-    // (requires a signal from MainWindow)
     if (gameWindow) {
-        // The gameWindow is likely already closing or closed.
-        // We might just need to delete the pointer if it wasn't parented correctly.
-        // delete gameWindow; // Be careful with ownership here
+        delete gameWindow;
         gameWindow = nullptr;
     }
-    // Check save state again in case a game was completed/deleted
-    btnContinueGame->setEnabled(hasSavedGame());
-    this->show(); // Show the main menu again
-}
 
+    btnContinueGame->setEnabled(hasSavedGame());
+    this->show(); 
+}
 
 QString MainMenu::getSaveFilePath() {
     QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -167,5 +158,5 @@ QString MainMenu::getSaveFilePath() {
 
 bool MainMenu::hasSavedGame() {
     QFile file(getSaveFilePath());
-    return file.exists() && file.size() > 0; // Also check if file is not empty
+    return file.exists() && file.size() > 0;
 }

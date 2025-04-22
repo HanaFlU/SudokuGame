@@ -1,6 +1,5 @@
 #include "uihelper.h"
 
-// Define static style constants
 const QString UIHelper::STYLE_DEFAULT = "background-color: #ffffff; color: #333333;";
 const QString UIHelper::STYLE_READONLY = "background-color: #e6dbc8; color: #5a4d41; font-weight: bold; border: 1px solid #b0a593;";
 const QString UIHelper::STYLE_CORRECT = "background-color: #e0ffe0; color: #006400;";
@@ -12,10 +11,10 @@ UIHelper::UIHelper() {
 }
 
 void UIHelper::updateBoardUI(int board[UI_SIZE][UI_SIZE], QLineEdit* cells[UI_SIZE][UI_SIZE], bool& gameInProgress) {
-    gameInProgress = false; // Reset flag until user makes a move
+    gameInProgress = false;
     for (int row = 0; row < UI_SIZE; row++) {
         for (int col = 0; col < UI_SIZE; col++) {
-            cells[row][col]->setProperty("class", ""); // Clear custom classes
+            cells[row][col]->setProperty("class", "");
 
             if (board[row][col] == 0) {
                 cells[row][col]->setText("");
@@ -28,7 +27,6 @@ void UIHelper::updateBoardUI(int board[UI_SIZE][UI_SIZE], QLineEdit* cells[UI_SI
                 cells[row][col]->setStyleSheet(STYLE_READONLY);
             }
 
-            // Ensure validator is present
             if (!cells[row][col]->validator()) {
                 cells[row][col]->setValidator(new QIntValidator(1, 9, cells[row][col]));
             }
